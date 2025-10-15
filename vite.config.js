@@ -4,6 +4,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Project is deployed to https://kcicek.github.io/fxart/
+  // so assets must be resolved under "/fxart/" rather than domain root.
+  base: '/fxart/',
+  build: {
+    outDir: 'docs',
+    emptyOutDir: true,
+  },
   plugins: [
     react(),
     VitePWA({
@@ -17,7 +24,9 @@ export default defineConfig({
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',
-        start_url: '/',
+        // Ensure PWA scope/URLs work on a project page
+        start_url: '/fxart/',
+        scope: '/fxart/',
         icons: [
           {
             src: 'pwa-192x192.png',
