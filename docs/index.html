@@ -11,5 +11,17 @@
   </head>
   <body class="bg-gray-50">
     <div id="root"></div>
+    <script>
+      // Disable PWA on GitHub Pages: unregister any existing service workers
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations()
+          .then(regs => regs.forEach(r => r.unregister()))
+          .catch(() => {});
+        // Optional: clear caches created by previous SW
+        if (window.caches?.keys) {
+          caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
+        }
+      }
+    </script>
   </body>
 </html>
