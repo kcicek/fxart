@@ -1,6 +1,6 @@
-name: Build and Deploy
+name: Build and Publish to /docs
 
-# Ensure workflow has write permissions so deployment can push
+# Ensure workflow can write back to the repository
 permissions:
   contents: write
   pages: write
@@ -12,16 +12,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build-and-publish-docs:
+    # skip if the triggering commit is the workflow's own commit (we add [skip ci] when committing)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Do not persist the automatically provided token in the git config;
-          # allow the deploy action to use the token it receives.
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -34,15 +35,24 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          # Primary: built-in token
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Fallback (uncomment & create secret if GITHUB_TOKEN can't push due to org rules):
-          # github_token: ${{ secrets.GH_PAGES_TOKEN }}
-          publish_dir: ./build
-          # optional: customize branch or committer info
-          # publish_branch: gh-pages
-          # user_name: github-actions[bot]
-          # user_email: github-actions[bot]@users.noreply.github.com
+      - name: Prepare docs folder
+        run: |
+          # remove previous docs content (keep .git if present)
+          rm -rf docs || true
+          mkdir -p docs
+          cp -a build/. docs/
+
+      - name: Commit and push docs/
+        env:
+          GIT_COMMITTER_NAME: "github-actions[bot]"
+          GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
+        run: |
+          git config user.name "${GIT_COMMITTER_NAME}"
+          git config user.email "${GIT_COMMITTER_EMAIL}"
+          git add -A docs
+          if git diff --cached --quiet; then
+            echo "No changes to docs; nothing to commit"
+          else
+            git commit -m "chore(deploy): update docs from build [skip ci]"
+            git push origin HEAD:main
+          fi
