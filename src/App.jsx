@@ -282,18 +282,10 @@ export default function App() {
   }, [bucketCursorUrl])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
-        {/* Canvas only + compact toolbar */}
-        <div>
-          <div ref={containerRef} className="relative rounded-xl shadow-sm bg-white p-2 sm:p-3">
-            {/* Compact one-row toolbar */}
-            <div className="absolute left-3 right-3 top-3 z-10">
-              <div
-                className={`flex flex-wrap items-center gap-2 bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-2 ${
-                  toolbarReady ? '' : 'opacity-0 pointer-events-none'
-                } ${isMagicRunning ? 'pointer-events-none' : ''}`}
-              >
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Top menu bar (single line, horizontally scrollable on small screens) */}
+      <div className="w-full bg-white border-b border-gray-200 shadow-sm">
+        <div className={`flex items-center gap-2 p-2 overflow-x-auto whitespace-nowrap ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
                 {/* Line menu (icon only + color sample) */}
                 <div className="relative">
                   <button
@@ -439,13 +431,13 @@ export default function App() {
                   )}
                 </div>
 
-                {/* f(x) input */}
-                <div className="flex-1 min-w-[200px]">
+                {/* f(x) input - narrowed to keep menu compact */}
+                <div className="flex-none">
                   <input
                     value={expr}
                     onChange={e => setExpr(e.target.value)}
                     placeholder="f(x) ="
-                    className="w-full px-3 py-1.5 rounded-md border border-gray-200 text-sm"
+                    className="w-36 sm:w-56 md:w-64 px-3 py-1.5 rounded-md border border-gray-200 text-sm"
                   />
                 </div>
 
@@ -550,41 +542,41 @@ export default function App() {
                     <path d="M5 21h14" />
                   </svg>
                 </button>
-              </div>
-            </div>
+        </div>
+      </div>
 
-            <Canvas
-              ref={canvasRef}
-              expression={expr}
-              params={params}
-              lineColor={lineColor}
-              bgColor={bgColor}
-              tiltAngle={tilt}
-              lineWidth={lineWidth}
-              lineOpacity={lineOpacity}
-              activeTool={activeTool}
-            />
+      {/* Canvas area fills remaining space below menu */}
+      <div className="flex-1 min-h-0 p-2 sm:p-3">
+        <div ref={containerRef} className="relative h-full rounded-xl shadow-sm bg-white">
+          <Canvas
+            ref={canvasRef}
+            expression={expr}
+            params={params}
+            lineColor={lineColor}
+            bgColor={bgColor}
+            tiltAngle={tilt}
+            lineWidth={lineWidth}
+            lineOpacity={lineOpacity}
+            activeTool={activeTool}
+            fillParent={true}
+          />
 
-            {/* Transparent overlay to capture bucket clicks */}
-            <div
-              onClick={handleBucketClick}
-              className="absolute inset-2 sm:inset-3"
-              style={{
-                // enable only for bucket to avoid intercepting line draws
-                pointerEvents: activeTool === 'bucket' ? 'auto' : 'none',
-                // show bucket cursor with hotspot at bottom-right (w-1, h-1)
-                cursor:
-                  activeTool === 'bucket'
-                    ? (bucketCursorUrl
-                        ? `url("${bucketCursorUrl}") ${Math.max((bucketCursorSize?.w || 0) - 1, 0)} ${Math.max((bucketCursorSize?.h || 0) - 1, 0)}, auto`
-                        : 'crosshair')
-                    : 'auto',
-                // above canvas, below toolbar
-                zIndex: 5,
-                background: 'transparent',
-              }}
-            />
-          </div>
+          {/* Transparent overlay to capture bucket clicks only over canvas */}
+          <div
+            onClick={handleBucketClick}
+            className="absolute inset-0"
+            style={{
+              pointerEvents: activeTool === 'bucket' ? 'auto' : 'none',
+              cursor:
+                activeTool === 'bucket'
+                  ? (bucketCursorUrl
+                      ? `url("${bucketCursorUrl}") ${Math.max((bucketCursorSize?.w || 0) - 1, 0)} ${Math.max((bucketCursorSize?.h || 0) - 1, 0)}, auto`
+                      : 'crosshair')
+                  : 'auto',
+              zIndex: 5,
+              background: 'transparent',
+            }}
+          />
         </div>
       </div>
     </div>

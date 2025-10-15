@@ -103,7 +103,8 @@ const Canvas = forwardRef(function Canvas({
   lineWidth = 2,
   lineOpacity = 1,
   heightVh = 60,
-  activeTool = 'line'
+  activeTool = 'line',
+  fillParent = false
 }, ref) {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
@@ -133,7 +134,9 @@ const Canvas = forwardRef(function Canvas({
     if (!canvas || !parent) return
     const dpr = Math.max(1, window.devicePixelRatio || 1)
     const cssWidth = parent.clientWidth
-    const cssHeight = Math.round(window.innerHeight * (heightVh / 100))
+    const cssHeight = fillParent
+      ? Math.max(0, parent.clientHeight)
+      : Math.round(window.innerHeight * (heightVh / 100))
     canvas.style.width = cssWidth + 'px'
     canvas.style.height = cssHeight + 'px'
     canvas.width = Math.floor(cssWidth * dpr)
@@ -390,7 +393,7 @@ const Canvas = forwardRef(function Canvas({
   }
 
   return (
-    <div ref={containerRef} className="w-full">
+    <div ref={containerRef} className={`w-full ${fillParent ? 'h-full' : ''}`}>
       {error && (
         <div className="mb-2 text-sm text-red-600">{error}</div>
       )}
