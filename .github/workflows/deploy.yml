@@ -35,12 +35,32 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Prepare docs folder
+      - name: Determine publish directory (build or dist)
+        id: detect
         run: |
-          # remove previous docs content (keep .git if present)
+          echo "Looking for common build output directories..."
+          if [ -d build ]; then
+            echo "Found build/ -> publishing build/"
+            echo "PUBLISH_DIR=build" >> $GITHUB_ENV
+          elif [ -d dist ]; then
+            echo "Found dist/ -> publishing dist/"
+            echo "PUBLISH_DIR=dist" >> $GITHUB_ENV
+          else
+            echo "::error::No build output found. Checked 'build/' and 'dist/'."
+            echo "Project root listing:"
+            ls -la
+            echo "package.json (showing scripts section):"
+            node -e "console.log(JSON.stringify(require('./package.json').scripts,null,2))" || cat package.json
+            echo "::error::Ensure 'npm run build' succeeded and produced a build directory (build/ or dist/)."
+            exit 1
+          fi
+
+      - name: Prepare docs folder from build output
+        run: |
+          echo "Using publish dir: $PUBLISH_DIR"
           rm -rf docs || true
           mkdir -p docs
-          cp -a build/. docs/
+          cp -a "$PUBLISH_DIR/." docs/
 
       - name: Commit and push docs/
         env:
