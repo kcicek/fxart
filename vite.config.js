@@ -8,7 +8,7 @@ export default defineConfig({
   // so assets must be resolved under "/fxart/" rather than domain root.
   base: '/fxart/',
   build: {
-    outDir: 'docs',
+    outDir: 'dist',
     emptyOutDir: true,
   },
   plugins: [
