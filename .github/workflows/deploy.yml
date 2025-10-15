@@ -1,5 +1,11 @@
 name: Build and Deploy
 
+# Grant the minimum necessary write permissions so the action can push
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 on:
   push:
     branches: [ main ]
@@ -13,6 +19,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Do not persist the automatically provided token in the git config;
+          # allow the deploy action to use the token it receives.
+          persist-credentials: false
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -28,5 +37,8 @@ jobs:
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
+          # Prefer the built-in GITHUB_TOKEN; if this fails due to org/branch restrictions,
+          # create a PAT (repo scope) and set it as a secret, then replace with that secret:
+          # github_token: ${{ secrets.GH_PAGES_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
