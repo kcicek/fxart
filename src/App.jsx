@@ -75,7 +75,8 @@ export default function App() {
   // - Carves out pixels similar to the seed color so recoloring works
   // - Grows fill only through non-barrier pixels similar to the seed color
   const floodFill = useCallback((canvasEl, x, y, fillRgba, tolerance = 24, gapClose = 1, bgHex = '#ffffff') => {
-    const ctx = canvasEl.getContext('2d')
+    // const ctx = canvasEl.getContext('2d')
+    const ctx = canvasEl.getContext('2d', { willReadFrequently: true })
     if (!ctx) return
     const { width, height } = canvasEl
     const img = ctx.getImageData(0, 0, width, height)
