@@ -1,6 +1,6 @@
 name: Build and Deploy
 
-# Grant the minimum necessary write permissions so the action can push
+# Ensure workflow has write permissions so deployment can push
 permissions:
   contents: write
   pages: write
@@ -37,8 +37,12 @@ jobs:
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          # Prefer the built-in GITHUB_TOKEN; if this fails due to org/branch restrictions,
-          # create a PAT (repo scope) and set it as a secret, then replace with that secret:
-          # github_token: ${{ secrets.GH_PAGES_TOKEN }}
+          # Primary: built-in token
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Fallback (uncomment & create secret if GITHUB_TOKEN can't push due to org rules):
+          # github_token: ${{ secrets.GH_PAGES_TOKEN }}
           publish_dir: ./build
+          # optional: customize branch or committer info
+          # publish_branch: gh-pages
+          # user_name: github-actions[bot]
+          # user_email: github-actions[bot]@users.noreply.github.com
