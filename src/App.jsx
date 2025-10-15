@@ -26,6 +26,7 @@ export default function App() {
   const [showParamMenu, setShowParamMenu] = useState(false)
   // add bucket popover state
   const [showBucketMenu, setShowBucketMenu] = useState(false)
+  const isAnyMenuOpen = showLineMenu || showParamMenu || showBucketMenu
   const canvasRef = useRef(null)
   const containerRef = useRef(null) // wrapper that contains the canvas
   const [bucketCursorUrl, setBucketCursorUrl] = useState(() => {
@@ -283,9 +284,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Top menu bar (single line, horizontally scrollable on small screens) */}
+      {/* Top menu bar (single line; popups can overflow into canvas) */}
       <div className="w-full bg-white border-b border-gray-200 shadow-sm relative z-50">
-        <div className={`flex items-center gap-2 p-2 overflow-x-auto overflow-y-visible whitespace-nowrap ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
+        <div className={`flex items-center gap-2 p-2 overflow-visible whitespace-nowrap ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
                 {/* Line menu (icon only + color sample) */}
                 <div className="relative">
                   <button
@@ -460,7 +461,7 @@ export default function App() {
                     abc
                   </button>
                   {showParamMenu && (
-                    <div className="absolute mt-2 right-0 w-72 bg-white border border-gray-200 rounded-lg shadow p-3 z-20">
+                    <div className="absolute mt-2 right-0 w-72 bg-white border border-gray-200 rounded-lg shadow p-3 z-50">
                       {['a','b','c'].map(k => (
                         <div className="mb-3" key={k}>
                           <div className="flex justify-between text-sm text-gray-600 mb-1">
@@ -568,7 +569,7 @@ export default function App() {
             style={{
               // leave the very top of the container free so popovers can extend there
               top: 0,
-              pointerEvents: activeTool === 'bucket' ? 'auto' : 'none',
+              pointerEvents: activeTool === 'bucket' && !isAnyMenuOpen ? 'auto' : 'none',
               cursor:
                 activeTool === 'bucket'
                   ? (bucketCursorUrl
