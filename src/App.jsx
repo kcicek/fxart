@@ -36,6 +36,7 @@ export default function App() {
   const [isMagicRunning, setIsMagicRunning] = useState(false)
   // measure bucket cursor image to place hotspot at bottom-right
   const [bucketCursorSize, setBucketCursorSize] = useState({ w: 0, h: 0 })
+  const [isLandscape, setIsLandscape] = useState(false)
 
   // New: bucket controls
   const [bucketTolerance, setBucketTolerance] = useState(24) // similarity to seed (sum abs RGBA)
@@ -301,11 +302,23 @@ export default function App() {
     img.src = bucketCursorUrl
   }, [bucketCursorUrl])
 
-  return (
-    <div className="h-app w-full bg-gray-50 flex flex-col overflow-hidden">
-      {/* Top menu bar (single line; popups can overflow into canvas) */}
-      <div className="w-full bg-white border-b border-gray-200 shadow-sm relative z-50">
-        <div className={`flex items-center gap-2 p-2 overflow-visible whitespace-nowrap ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
+  // Track orientation to switch layouts (portrait: top bar with two rows; landscape: sidebar with two columns)
+  useEffect(() => {
+    const mq = window.matchMedia('(orientation: landscape)')
+    const set = () => setIsLandscape(!!mq.matches)
+    set()
+    mq.addEventListener?.('change', set)
+    window.addEventListener('orientationchange', set)
+    return () => {
+      try { mq.removeEventListener?.('change', set) } catch {}
+      window.removeEventListener('orientationchange', set)
+    }
+  }, [])
+
+  const inputWidthClass = isLandscape ? 'w-40' : 'w-36 sm:w-56 md:w-64'
+
+  const ToolbarInner = (
+    <>
                 {/* Line menu (icon only + color sample) */}
                 <div className="relative">
                   <button
@@ -457,7 +470,7 @@ export default function App() {
                     value={expr}
                     onChange={e => setExpr(e.target.value)}
                     placeholder="f(x) ="
-                    className="w-36 sm:w-56 md:w-64 px-3 py-1.5 rounded-md border border-gray-200 text-sm"
+                    className={`${inputWidthClass} px-3 py-1.5 rounded-md border border-gray-200 text-sm`}
                   />
                 </div>
 
@@ -562,45 +575,94 @@ export default function App() {
                     <path d="M5 21h14" />
                   </svg>
                 </button>
-        </div>
-      </div>
+    </>
+  )
 
-      {/* Canvas area fills remaining space below menu */}
-      <div className="flex-1 min-h-0 p-2 sm:p-3">
-        <div ref={containerRef} className="relative h-full rounded-xl shadow-sm bg-white">
-          <Canvas
-            ref={canvasRef}
-            expression={expr}
-            params={params}
-            lineColor={lineColor}
-            bgColor={bgColor}
-            tiltAngle={tilt}
-            lineWidth={lineWidth}
-            lineOpacity={lineOpacity}
-            activeTool={activeTool}
-            fillParent={true}
-          />
-
-          {/* Transparent overlay to capture bucket clicks only over canvas */}
-          <div
-            onClick={handleBucketClick}
-            className="absolute left-0 right-0 bottom-0"
-            style={{
-              // leave the very top of the container free so popovers can extend there
-              top: 0,
-              pointerEvents: activeTool === 'bucket' && !isAnyMenuOpen ? 'auto' : 'none',
-              cursor:
-                activeTool === 'bucket'
-                  ? (bucketCursorUrl
-                      ? `url("${bucketCursorUrl}") ${Math.max((bucketCursorSize?.w || 0) - 1, 0)} ${Math.max((bucketCursorSize?.h || 0) - 1, 0)}, auto`
-                      : 'crosshair')
-                  : 'auto',
-              zIndex: 5,
-              background: 'transparent',
-            }}
-          />
-        </div>
-      </div>
+  return (
+    <div className={`h-app w-full bg-gray-50 overflow-hidden ${isLandscape ? 'flex' : 'flex flex-col'}`}>
+      {!isLandscape ? (
+        // Portrait: top bar (wraps to two rows) + canvas below
+        <>
+          <div className="w-full bg-white border-b border-gray-200 shadow-sm relative z-50">
+            <div className={`flex flex-wrap items-center gap-2 p-2 overflow-visible ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
+              {ToolbarInner}
+            </div>
+          </div>
+          <div className="flex-1 min-h-0 p-2 sm:p-3">
+            <div ref={containerRef} className="relative h-full rounded-xl shadow-sm bg-white">
+              <Canvas
+                ref={canvasRef}
+                expression={expr}
+                params={params}
+                lineColor={lineColor}
+                bgColor={bgColor}
+                tiltAngle={tilt}
+                lineWidth={lineWidth}
+                lineOpacity={lineOpacity}
+                activeTool={activeTool}
+                fillParent={true}
+              />
+              <div
+                onClick={handleBucketClick}
+                className="absolute left-0 right-0 bottom-0"
+                style={{
+                  top: 0,
+                  pointerEvents: activeTool === 'bucket' && !isAnyMenuOpen ? 'auto' : 'none',
+                  cursor:
+                    activeTool === 'bucket'
+                      ? (bucketCursorUrl
+                          ? `url("${bucketCursorUrl}") ${Math.max((bucketCursorSize?.w || 0) - 1, 0)} ${Math.max((bucketCursorSize?.h || 0) - 1, 0)}, auto`
+                          : 'crosshair')
+                      : 'auto',
+                  zIndex: 5,
+                  background: 'transparent',
+                }}
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        // Landscape: canvas on left, two-column menu on right sidebar
+        <>
+          <div className="flex-1 min-w-0 min-h-0 p-2 sm:p-3">
+            <div ref={containerRef} className="relative h-full rounded-xl shadow-sm bg-white">
+              <Canvas
+                ref={canvasRef}
+                expression={expr}
+                params={params}
+                lineColor={lineColor}
+                bgColor={bgColor}
+                tiltAngle={tilt}
+                lineWidth={lineWidth}
+                lineOpacity={lineOpacity}
+                activeTool={activeTool}
+                fillParent={true}
+              />
+              <div
+                onClick={handleBucketClick}
+                className="absolute left-0 right-0 bottom-0"
+                style={{
+                  top: 0,
+                  pointerEvents: activeTool === 'bucket' && !isAnyMenuOpen ? 'auto' : 'none',
+                  cursor:
+                    activeTool === 'bucket'
+                      ? (bucketCursorUrl
+                          ? `url("${bucketCursorUrl}") ${Math.max((bucketCursorSize?.w || 0) - 1, 0)} ${Math.max((bucketCursorSize?.h || 0) - 1, 0)}, auto`
+                          : 'crosshair')
+                      : 'auto',
+                  zIndex: 5,
+                  background: 'transparent',
+                }}
+              />
+            </div>
+          </div>
+          <div className="w-64 md:w-72 bg-white border-l border-gray-200 shadow-sm relative z-50 p-2">
+            <div className={`grid grid-cols-2 gap-2 items-start ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
+              {ToolbarInner}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
