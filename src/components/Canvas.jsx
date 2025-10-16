@@ -113,6 +113,8 @@ const Canvas = forwardRef(function Canvas({
   const frozenImageRef = useRef(null) // HTMLImageElement holding last frozen render
   const usedExpressionsRef = useRef(new Set()) // Track all valid expressions rendered
   const resizeObserverRef = useRef(null)
+  const resizeSnapshotRef = useRef(null) // { off: HTMLCanvasElement, widthPx: number, heightPx: number }
+  const skipNextFunctionDrawRef = useRef(false)
 
   // compile on expression change
   useEffect(() => {
@@ -133,6 +135,17 @@ const Canvas = forwardRef(function Canvas({
     const canvas = canvasRef.current
     const parent = containerRef.current
     if (!canvas || !parent) return
+    // Snapshot current bitmap before resizing so we can restore it after
+    if (canvas.width > 0 && canvas.height > 0) {
+      try {
+        const off = document.createElement('canvas')
+        off.width = canvas.width
+        off.height = canvas.height
+        const octx = off.getContext('2d')
+        octx.drawImage(canvas, 0, 0)
+        resizeSnapshotRef.current = { off, widthPx: off.width, heightPx: off.height }
+      } catch {}
+    }
     const dpr = Math.max(1, window.devicePixelRatio || 1)
     const cssWidth = parent.clientWidth
     const cssHeight = fillParent
@@ -156,7 +169,20 @@ const Canvas = forwardRef(function Canvas({
     const dpr = canvas._dpr || 1
     const w = canvas.width / dpr
     const h = canvas.height / dpr
-    // First, if there is a frozen image, draw it as the background
+    // If we have a resize snapshot (from a size/orientation change),
+    // restore it scaled to the new canvas size and skip the function draw once
+    if (resizeSnapshotRef.current) {
+      const snap = resizeSnapshotRef.current
+      ctx.clearRect(0, 0, w, h)
+      try {
+        // Draw source (device pixels) into destination (CSS pixels)
+        ctx.drawImage(snap.off, 0, 0, snap.widthPx, snap.heightPx, 0, 0, w, h)
+      } catch {}
+      resizeSnapshotRef.current = null
+      skipNextFunctionDrawRef.current = true
+    }
+
+    // First, if there is a frozen image, draw it as the background (unless a resize snapshot just restored)
     if (frozenImageRef.current) {
       ctx.clearRect(0, 0, w, h)
       ctx.drawImage(frozenImageRef.current, 0, 0, w, h)
@@ -174,7 +200,7 @@ const Canvas = forwardRef(function Canvas({
       sqrt: math.sqrt,
       pow: math.pow,
     }
-    if (compiled) {
+    if (compiled && !skipNextFunctionDrawRef.current) {
         // Draw current function. If we have a frozen background, skip clearing so it stays.
         const skip = Boolean(frozenImageRef.current)
       drawFunction(ctx, canvas, compiled, scope, lineColor, bgColor, tiltAngle, skip, lineWidth, lineOpacity)
@@ -184,6 +210,9 @@ const Canvas = forwardRef(function Canvas({
       ctx.fillStyle = bgColor || '#ffffff'
       ctx.fillRect(0, 0, w, h)
     }
+
+    // reset the one-time skip flag after render
+    if (skipNextFunctionDrawRef.current) skipNextFunctionDrawRef.current = false
   }
 
   useEffect(() => {

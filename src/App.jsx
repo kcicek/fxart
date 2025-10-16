@@ -339,7 +339,10 @@ export default function App() {
                     />
                   </button>
                   {showLineMenu && (
-                    <div className="absolute mt-2 left-0 w-64 bg-white border border-gray-200 rounded-lg shadow p-3 z-50">
+                    <div
+                      className={`absolute ${isLandscape ? 'right-full mr-2 top-0' : 'mt-2 left-0'} w-64 bg-white border border-gray-200 rounded-lg shadow p-3 z-50`}
+                      style={{ maxHeight: 'calc(var(--app-vh) - 16px)', overflowY: 'auto' }}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm text-gray-600">Color</label>
                         <input
@@ -408,7 +411,10 @@ export default function App() {
                     />
                   </button>
                   {showBucketMenu && (
-                    <div className="absolute mt-2 left-0 w-64 bg-white border border-gray-200 rounded-lg shadow p-3 z-50">
+                    <div
+                      className={`absolute ${isLandscape ? 'right-full mr-2 top-0' : 'mt-2 left-0'} w-64 bg-white border border-gray-200 rounded-lg shadow p-3 z-50`}
+                      style={{ maxHeight: 'calc(var(--app-vh) - 16px)', overflowY: 'auto' }}
+                    >
                       <div className="flex items-center justify-between">
                         <label className="text-sm text-gray-600">Color</label>
                         <input
@@ -493,7 +499,10 @@ export default function App() {
                     abc
                   </button>
                   {showParamMenu && (
-                    <div className="absolute mt-2 right-0 w-72 bg-white border border-gray-200 rounded-lg shadow p-3 z-50">
+                    <div
+                      className={`absolute ${isLandscape ? 'right-full mr-2 top-0' : 'mt-2 right-0'} w-72 bg-white border border-gray-200 rounded-lg shadow p-3 z-50`}
+                      style={{ maxHeight: 'calc(var(--app-vh) - 16px)', overflowY: 'auto' }}
+                    >
                       {['a','b','c'].map(k => (
                         <div className="mb-3" key={k}>
                           <div className="flex justify-between text-sm text-gray-600 mb-1">
@@ -656,7 +665,7 @@ export default function App() {
               />
             </div>
           </div>
-          <div className="w-64 md:w-72 bg-white border-l border-gray-200 shadow-sm relative z-50 p-2">
+          <div className="w-64 md:w-72 bg-white border-l border-gray-200 shadow-sm relative z-50 p-2 overflow-visible">
             <div className={`grid grid-cols-2 gap-2 items-start ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
               {ToolbarInner}
             </div>
