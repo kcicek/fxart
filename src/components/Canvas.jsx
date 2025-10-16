@@ -178,6 +178,16 @@ const Canvas = forwardRef(function Canvas({
         // Draw source (device pixels) into destination (CSS pixels)
         ctx.drawImage(snap.off, 0, 0, snap.widthPx, snap.heightPx, 0, 0, w, h)
       } catch {}
+      // Persist the restored content as a frozen background so subsequent renders
+      // won't clear it. This keeps user's work across orientation/size changes.
+      try {
+        const dataUrl = canvas.toDataURL('image/png')
+        const img = new Image()
+        img.onload = () => {
+          frozenImageRef.current = img
+        }
+        img.src = dataUrl
+      } catch {}
       resizeSnapshotRef.current = null
       skipNextFunctionDrawRef.current = true
     }
