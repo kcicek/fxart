@@ -62,6 +62,25 @@ export default function App() {
     setExpr(next)
   }, [])
 
+  // Sync a CSS variable to the device's visual viewport height to avoid
+  // bottom address bar gaps on mobile browsers.
+  useEffect(() => {
+    const root = document.documentElement
+    const setVh = () => {
+      const vh = (window.visualViewport?.height ?? window.innerHeight)
+      root.style.setProperty('--app-vh', vh + 'px')
+    }
+    setVh()
+    window.addEventListener('resize', setVh)
+    window.visualViewport?.addEventListener('resize', setVh)
+    window.addEventListener('orientationchange', setVh)
+    return () => {
+      window.removeEventListener('resize', setVh)
+      window.visualViewport?.removeEventListener('resize', setVh)
+      window.removeEventListener('orientationchange', setVh)
+    }
+  }, [])
+
   // Helper: hex string -> [r,g,b,a]
   const hexToRgba = useCallback((hex) => {
     let h = hex.replace('#', '')
@@ -283,7 +302,7 @@ export default function App() {
   }, [bucketCursorUrl])
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-app w-full bg-gray-50 flex flex-col overflow-hidden">
       {/* Top menu bar (single line; popups can overflow into canvas) */}
       <div className="w-full bg-white border-b border-gray-200 shadow-sm relative z-50">
         <div className={`flex items-center gap-2 p-2 overflow-visible whitespace-nowrap ${toolbarReady ? '' : 'opacity-0 pointer-events-none'} ${isMagicRunning ? 'pointer-events-none' : ''}`}>
