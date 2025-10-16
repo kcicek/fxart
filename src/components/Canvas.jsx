@@ -112,6 +112,7 @@ const Canvas = forwardRef(function Canvas({
   const [error, setError] = useState(null)
   const frozenImageRef = useRef(null) // HTMLImageElement holding last frozen render
   const usedExpressionsRef = useRef(new Set()) // Track all valid expressions rendered
+  const resizeObserverRef = useRef(null)
 
   // compile on expression change
   useEffect(() => {
@@ -193,7 +194,23 @@ const Canvas = forwardRef(function Canvas({
       render()
     }
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    // Also respond to orientation changes and visual viewport updates
+    window.addEventListener('orientationchange', onResize)
+    window.visualViewport?.addEventListener('resize', onResize)
+
+    // Observe parent size changes (e.g., when the menu wraps or mobile UI changes)
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(() => onResize())
+      resizeObserverRef.current = ro
+      if (containerRef.current) ro.observe(containerRef.current)
+    }
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+      window.visualViewport?.removeEventListener('resize', onResize)
+      try { resizeObserverRef.current?.disconnect() } catch {}
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
