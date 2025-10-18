@@ -285,6 +285,7 @@ const Canvas = forwardRef(function Canvas({
         footerLines.push('Functions used: ' + exprs.join(' | '))
       }
       footerLines.push('Made possible by fxART')
+      footerLines.push('Create your own at https://kcicek.github.io/fxart/')
       const footerText = footerLines.join('\n')
       // Measure text using an offscreen canvas
       const off = document.createElement('canvas')
